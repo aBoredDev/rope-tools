@@ -1,89 +1,98 @@
 #!/usr/bin/env python3
 from math import sin, acos, pi
 from prompt_toolkit import PromptSession
+from prompt_toolkit.styles import Style
+from prompt_toolkit.shortcuts import input_dialog, message_dialog
 import utilities
 
 
 class TwistedEyeSplice:
     title = "Eye Splice"
-    rope_type = 1  # Twisted
+    rope_type = utilities.RopeType.TWISTED
     reference = "ABOK #2725"
 
-    eye_radius_message = "Enter desired eye radius or d to use diameter: "
-    eye_diameter_message = "Enter desired eye diameter: "
     rope_diameter_message = "Enter rope diameter: "
-    bury_count_message = "Enter number of buries (5 is typical): "
+    tuck_count_message = "Enter number of 'tucks' (5 is typical): "
 
     def __init__(
-        self, session_or_style: utilities.SessionOrStyle, full_screen: bool = False
+        self, session: PromptSession, style: Style
     ):
         """Class for calculating the length of rope required for an eye splice in twisted rope
 
         Args:
-            session_or_style (SessionOrStyle): PromptSession or Style object, ensures consistent formatting.
-            full_screen (bool, optional): Whether or not to use dialogs. Defaults to False.
+            session (PromptSession): Ensures consistent formatting in text only mode.
+            style (Style): Ensures consistent formatting in dialog mode.
         """
-        self.full_screen = full_screen
-        if full_screen:
-            self.session = None
-            self.style = session_or_style
-        else:
-            self.session = session_or_style
-            self.style = None
+        self.style = style
+        self.session = session
 
-    def text_only(self):
-        """Collects parameters and runs calculations in a basic text format"""
-        # === Collect parameters ===
-        # Eye radius/diameter
-        raw_eye_radius: str = self.session.prompt(self.eye_radius_message)
-        if raw_eye_radius.lower() == "d":
-            raw_eye_diameter = self.session.prompt(self.eye_diameter_message)
-            eye_radius = float(raw_eye_diameter) / 2
-        else:
-            eye_radius = float(raw_eye_radius)
-
-        # Rope diameter
-        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
-
-        # No. of buries
-        bury_count = int(self.session.prompt(self.bury_count_message))
-
-        # === Run calculations ===
+    def calculate(self, eye_radius: float, rope_diameter: float, tuck_count: int) -> tuple[float]:
+        """Run calculation with collected parameters"""
+        # Angle between rope axis and the end of the tangent section (90°-alpha)
         beta = acos(eye_radius / (eye_radius * 3))
+        # Angle between 180° and tangent section
         alpha = (pi / 2) - beta
 
+        # Arc length of the eye
         A = ((alpha + pi) / (2 * pi)) * (2 * pi * eye_radius)
+        # Length of the tangent section
         B = sin(beta) / (eye_radius * 3)
 
         # Total length of the eye
         eye_length = A + 2 * B
-        # Length required for the bury
-        bury_length = rope_diameter * (3 * bury_count)
-        # Full length required for the splice (eye + 1 bury length)
-        full_length = eye_length + bury_length
+        # Length required for the tucks
+        tuck_length = rope_diameter * (3 * tuck_count)
+        # Full length required for the splice (eye + 1 tuck length)
+        full_length = eye_length + tuck_length
         # Approximate length lost to the splice
         lost_length = full_length - eye_radius * 4
 
-        # Print to screen
-        print(
-            f"Results\n================\nFull length: {full_length: .4f}\nEye length: {eye_length: .4f}\nBury length: {bury_length: .4f}\nEst. length lost: {lost_length}"
+        return full_length, eye_length, tuck_length, lost_length
+
+    def text(self):
+        """Collects parameters and runs calculations in a basic text format"""
+        # === Collect parameters ===
+        # Eye radius/diameter
+        eye_radius = utilities.radius_or_diameter_text(self.session, "eye")
+
+        # Rope diameter
+        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
+
+        # No. of tucks
+        tuck_count = int(self.session.prompt(self.tuck_count_message))
+
+        # === Run calculations ===
+        full_length, eye_length, tuck_length, lost_length = self.calculate(
+            eye_radius, rope_diameter, tuck_count
         )
 
-    def console_gui(self):
-        """Collects parameters and runs calculations with a console GUI"""
-        # Not yet implemented, just call text_only() so things don't break
-        # If we are running in full screen mode, this doesn't get defined on initialization
-        self.session = PromptSession()
-        self.text_only()
+        # Print to screen
+        print(
+            f"Results\n================\nFull length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nTuck length: {utilities.as_mixed_number(tuck_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}"
+        )
 
-    def calculate(self):
-        """Collect parameters and calculate length required for the eye splice,
-        selecting the correct method for current mode automatically.
-        """
-        if self.full_screen:
-            self.console_gui()
-        else:
-            self.text_only()
+    def dialog(self):
+        """Collects parameters and runs calculations with a console GUI"""
+        # === Collect parameters ===
+        try:
+            eye_radius = utilities.radius_or_diameter_dialog(self.style, self.title, "eye")
+
+            rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
+
+            tuck_count = int(input_dialog(title=self.title, text=self.tuck_count_message, style=self.style).run())
+        except TypeError:
+            return
+
+        # === Run calculations ===
+        full_length, eye_length, tuck_length, lost_length = self.calculate(
+            eye_radius, rope_diameter, tuck_count
+        )
+
+        # === Show results ===
+        message_dialog(
+            title="Results",
+            text=f"Full length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nTuck length: {utilities.as_mixed_number(tuck_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}",
+        ).run()
 
     def __str__(self):
         return self.title
@@ -91,43 +100,24 @@ class TwistedEyeSplice:
 
 class HollowBraidLockedEyeSplice:
     title = "Locked Brummel Eye Splice"
-    rope_type = 2  # Hollow
+    rope_type = utilities.RopeType.HOLLOW_BRAID
 
-    eye_radius_message = "Enter desired eye radius or d to use diameter: "
-    eye_diameter_message = "Enter desired eye diameter: "
     rope_diameter_message = "Enter rope diameter: "
 
     def __init__(
-        self, session_or_style: utilities.SessionOrStyle, full_screen: bool = False
+        self, session: PromptSession, style: Style
     ):
-        """Class for calculating the length of rope required for an eye splice in twisted rope
+        """Class for calculating the length of rope required for an eye splice in hollow braid rope
 
         Args:
-            session_or_style (SessionOrStyle): PromptSession or Style object, ensures consistent formatting.
-            full_screen (bool, optional): Whether or not to use dialogs. Defaults to False.
+            session (PromptSession): Ensures consistent formatting in text only mode.
+            style (Style): Ensures consistent formatting in dialog mode.
         """
-        self.full_screen = full_screen
-        if full_screen:
-            self.session = None
-            self.style = session_or_style
-        else:
-            self.session = session_or_style
-            self.style = None
+        self.style = style
+        self.session = session
 
-    def text_only(self):
-        """Collects parameters and runs calculations in a basic text format"""
-        # === Collect parameters ===
-        # Eye radius/diameter
-        raw_eye_radius: str = self.session.prompt(self.eye_radius_message)
-        if raw_eye_radius.lower() == "d":
-            raw_eye_diameter = self.session.prompt(self.eye_diameter_message)
-            eye_radius = float(raw_eye_diameter) / 2
-        else:
-            eye_radius = float(raw_eye_radius)
-
-        # Rope diameter
-        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
-
+    def calculate(self, eye_radius: float, rope_diameter: float) -> tuple[float]:
+        """Calculate length required for the eye splice."""
         # === Run calculations ===
         # Angle between rope axis and end of tangent section (90°-alpha)
         beta = acos(eye_radius / (eye_radius * 3))
@@ -147,26 +137,50 @@ class HollowBraidLockedEyeSplice:
         # Approximate length lost to the splice
         lost_length = full_length - eye_radius * 4
 
-        # Print to screen
-        print(
-            f"Results\n================\nFull length: {full_length: .4f}\nEye length: {eye_length: .4f}\nBury length: {bury_length: .4f}\nEst. length lost: {lost_length}"
+        return full_length, eye_length, bury_length, lost_length
+
+    def text(self):
+        """Collects parameters and prints results in text only mode"""
+        # === Collect parameters ===
+        # Eye radius/diameter
+        eye_radius = utilities.radius_or_diameter_text(self.session, "eye")
+
+        # Rope diameter
+        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
+
+        # === Run calculations ===
+        full_length, eye_length, bury_length, lost_length = self.calculate(
+            eye_radius, rope_diameter
         )
 
-    def console_gui(self):
-        """Collects parameters and runs calculations with a console GUI"""
-        # Not yet implemented, just call text_only() so things don't break
-        # If we are running in full screen mode, this doesn't get defined on initialization
-        self.session = PromptSession()
-        self.text_only()
+        # Print to screen
+        print(
+            f"Results\n================\nFull length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nBury length: {utilities.as_mixed_number(bury_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}"
+        )
 
-    def calculate(self):
-        """Collect parameters and calculate length required for the eye splice,
-        selecting the correct method for current mode automatically.
-        """
-        if self.full_screen:
-            self.console_gui()
-        else:
-            self.text_only()
+    def dialog(self):
+        """Collects parameters and prints results in dialog mode"""
+        try:
+            eye_radius = utilities.radius_or_diameter_dialog(self.style, self.title, "eye")
+
+            rope_diameter = float(
+                input_dialog(
+                    title="Rope diameter", text=self.rope_diameter_message
+                ).run()
+            )
+        except TypeError:
+            return
+
+        # === Run calculations ===
+        full_length, eye_length, bury_length, lost_length = self.calculate(
+            eye_radius, rope_diameter
+        )
+
+        # === Show results ===
+        message_dialog(
+            title="Results",
+            text=f"Full length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nBury length: {utilities.as_mixed_number(bury_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}",
+        ).run()
 
     def __str__(self):
         return self.title

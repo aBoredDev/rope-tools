@@ -2,7 +2,10 @@
 from typing import TypeAlias, Union
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
+from prompt_toolkit.shortcuts import input_dialog
 from enum import Enum
+import re
+import math
 
 
 SessionOrStyle: TypeAlias = Union[PromptSession, Style]
@@ -10,15 +13,15 @@ SessionOrStyle: TypeAlias = Union[PromptSession, Style]
 
 def select_from_list(
     session: PromptSession, start_message: str, options: list, oops_option: str
-):
+) -> int:
     options_list = "".join(
-        [f"\n  {i}) {options[i]}" for i in range(len(options + [oops_option]))]
+        [f"\n  {i}) {options[i]}" for i in range(len(options))] + [f"\n  {len(options)}) {oops_option}"]
     )
     full_message = start_message + options_list + "\n\n> "
     while True:
         try:
             answer = int(session.prompt(full_message))
-            if rope_type > len(rope_types):
+            if answer > len(options):
                 print(
                     f"'{answer}' is not a valid option. Please try again or select the '{oops_option}' option.\n"
                 )
@@ -31,10 +34,61 @@ def select_from_list(
             )
 
 
+def radius_or_diameter_text(session: PromptSession, item_name: str) -> float:
+    raw_radius: str = session.prompt(f"Enter {item_name} radius or d to use diameter: ")
+    if raw_radius in ["d", "D"]:
+        raw_diameter = session.prompt(f"Enter {item_name} diameter: ")
+        return float(raw_diameter) / 2
+    else:
+        return float(raw_radius)
+
+
+def radius_or_diameter_dialog(style: Style, title: str, item_name: str) -> float:
+    raw_radius = input_dialog(
+        title=title,
+        text=f"Enter {item_name} radius or d to use diameter",
+        style=style
+    ).run()
+    if raw_radius in ["d", "D"]:
+        raw_diameter = input_dialog(
+            title=title,
+            text=f"Enter {item_name} diameter",
+            style=style
+        ).run()
+        return float(raw_diameter) / 2
+    else:
+        return float(raw_radius)
+
+def round_to_sixteenths(value: float) -> float:
+    remainder = value % 0.0625
+    return value - remainder
+
+def as_mixed_number(value: float) -> str:
+    rounded_value = round_to_sixteenths(value)
+    
+    fractional_part = (rounded_value % 1) * 16
+    integral_part = int(rounded_value)
+    
+    halves = 1
+    while fractional_part:
+        if fractional_part % 2:
+            break
+        fractional_part /= 2
+        halves *= 2
+    
+    if not fractional_part:
+        return str(integral_part)
+    else:
+        return f"{integral_part}+{int(fractional_part)}/{int(16/halves)}"
+
+
 class RopeType(Enum):
     GENERAL = 0
     TWISTED = 1
     HOLLOW_BRAID = 2
+
+    def __str__(self):
+        return self.name.capitalize().replace("_", " ")
 
 
 class LengthCalculator:

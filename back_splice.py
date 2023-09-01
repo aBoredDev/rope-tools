@@ -1,59 +1,66 @@
 #!/usr/bin/env python3
 from prompt_toolkit import PromptSession
+from prompt_toolkit.styles import Style
+from prompt_toolkit.shortcuts import input_dialog, message_dialog
 import utilities
 
 
 class TwistedBackSplice:
     title = "Back Splice"
-    rope_type = 1  # Twisted
+    rope_type = utilities.RopeType.TWISTED
     reference = "ABOK #2813"
 
     rope_diameter_message = "Enter rope diameter: "
     bury_count_message = "Enter number of buries (5 is typical): "
 
     def __init__(
-        self, session_or_style: utilities.SessionOrStyle, full_screen: bool = False
+        self, session: PromptSession, style: Style
     ):
         """Class for calculating the length of rope required for a back splice in twisted rope
 
         Args:
-            session_or_style (SessionOrStyle): PromptSession or Style object, ensures consistent formatting.
-            full_screen (bool, optional): Whether or not to use dialogs. Defaults to False.
+            session (PromptSession): Ensures consistent formatting in text only mode.
+            style (Style): Ensures consistent formatting in dialog mode.
         """
-        self.full_screen = full_screen
-        if full_screen:
-            self.session = None
-            self.style = session_or_style
-        else:
-            self.session = session_or_style
-            self.style = None
+        self.style = style
+        self.session = session
 
-    def text_only(self):
+    def text(self):
         """Collects parameters and runs calculations in a basic text format"""
         # === Collect parameters ===
         rope_diameter = float(self.session.prompt(self.rope_diameter_message))
 
         # === Run calculations ===
-        length = rope_diameter * 15
+        length = self.calculate(rope_diameter)
 
         # === Display results ===
-        print(f"Results\n================\nLength: {length: .4f}")
+        print(f"Results\n================\nLength: {utilities.as_mixed_number(length)}")
 
-    def console_gui(self):
+    def dialog(self):
         """Collects parameters and runs calculations with a console GUI"""
-        # Not yet implemented, just call text_only() so things don't break
-        # If we are running in full screen mode, this doesn't get defined on initialization
-        self.session = PromptSession()
-        self.text_only()
+        try:
+            rope_diameter = float(
+                input_dialog(
+                    title=self.title, text=self.rope_diameter_message, style=self.style
+                ).run()
+            )
+        except TypeError:
+            return
 
-    def calculate(self):
-        """Collect parameters and calculate length required for the back splice,
-        selecting the correct method for current mode automatically.
-        """
-        if self.full_screen:
-            self.console_gui()
-        else:
-            self.text_only()
+        # === Run calculations ===
+        length = self.calculate(rope_diameter)
+
+        # === Show results ===
+        message_dialog(
+            title="Results",
+            text=f"Length: {utilities.as_mixed_number(length)}",
+            style=self.style
+        ).run()
+
+    def calculate(self, rope_diameter: float) -> float:
+        """Calculate length required for the back splice."""
+        # === Run calculations ===
+        return rope_diameter * 15
 
     def __str__(self):
         return self.title
