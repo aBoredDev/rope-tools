@@ -13,7 +13,7 @@ Short section length is based off the Sampson tubular fid sizes.
 
 ### Twisted ropes
 #### Eye splice
-Caluculates the length needed to form an eye of a given diameter with a given diameter of rope.
+Caluculates the length needed to form an eye of a given diameter with a given diameter of rope. Includes a correction to account for the diameter of the rope.
 
 #### Back splice
 Calculates the length needed to make back splice in a given diameter of rope. Uses a value of 15 rope diameters [^1] and assumes 3 tucks. 
@@ -23,7 +23,7 @@ Calculates the length of rope needed to make a chain splice (attaches a rope to 
 
 ### Hollow braid ropes
 #### Eye splice
-Caluculates the length needed to form an eye of a given diameter with a given diameter of rope.
+Caluculates the length needed to form an eye of a given diameter with a given diameter of rope. Includes a correction to account for the diameter of the rope.
 
 #### Chain splice
 Calculates the length of rope needed to make a chain splice (attaches a rope to a chain link) in a given diameter of rope.

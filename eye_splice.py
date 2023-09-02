@@ -28,6 +28,8 @@ class TwistedEyeSplice:
 
     def calculate(self, eye_radius: float, rope_diameter: float, tuck_count: int) -> tuple[float]:
         """Run calculation with collected parameters"""
+        # Correction to account for rope size
+        eye_radius += rope_diameter / 2
         # Angle between rope axis and the end of the tangent section (90°-alpha)
         beta = acos(eye_radius / (eye_radius * 3))
         # Angle between 180° and tangent section
@@ -119,6 +121,8 @@ class HollowBraidLockedEyeSplice:
     def calculate(self, eye_radius: float, rope_diameter: float) -> tuple[float]:
         """Calculate length required for the eye splice."""
         # === Run calculations ===
+        # Correction to accout for rope diameter
+        eye_radius += rope_diameter / 2
         # Angle between rope axis and end of tangent section (90°-alpha)
         beta = acos(eye_radius / (eye_radius * 3))
         # Angle between 180° and tangent section
