@@ -5,15 +5,31 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import input_dialog
 from enum import Enum
 import re
-import math
 
 
+# NOTE: DEPRECATED - Changed classes to accept both the session and style separately, instead
+# of taking one or the other.
 SessionOrStyle: TypeAlias = Union[PromptSession, Style]
 
 
 def select_from_list(
-    session: PromptSession, start_message: str, options: list, oops_option: str
+    session: PromptSession, start_message: str, options: list[str], oops_option: str
 ) -> int:
+    """Utility function that prompts the user to select an item from a list and returns
+    the index of the item they selected. Essentially a text-only companion to
+    'radiolist_dialog'.
+
+    Args:
+        session (PromptSession): The current PromptSession.
+        start_message (str): The inital message that usually contains the question.
+        options (list[str]): The list of options.
+        oops_option (str): The last option that will be added to the list, typically
+            'Back', 'Cancel', or 'Quit'.
+
+    Returns:
+        int: The index of the item selected. May be in the range of
+            [0, length of options list].
+    """
     options_list = "".join(
         [f"\n  {i}) {options[i]}" for i in range(len(options))] + [f"\n  {len(options)}) {oops_option}"]
     )
@@ -35,6 +51,15 @@ def select_from_list(
 
 
 def radius_or_diameter_text(session: PromptSession, item_name: str) -> float:
+    """Utility function for getting the radius or diameter of an item, using text only.
+
+    Args:
+        session (PromptSession): The current PromptSession.
+        item_name (str): The name of the item
+
+    Returns:
+        float: The radius of the item, because that's usually what we actually want.
+    """
     raw_radius: str = session.prompt(f"Enter {item_name} radius or d to use diameter: ")
     if raw_radius in ["d", "D"]:
         raw_diameter = session.prompt(f"Enter {item_name} diameter: ")
@@ -44,6 +69,16 @@ def radius_or_diameter_text(session: PromptSession, item_name: str) -> float:
 
 
 def radius_or_diameter_dialog(style: Style, title: str, item_name: str) -> float:
+    """Utility function for getting the radius or diameter of an item, using console dialogs.
+
+    Args:
+        style (Style): The Style object being used, to keep the formatting consistent
+        title (str): The title of the dialog
+        item_name (str): The name of the item
+
+    Returns:
+        float: The radius of the item, because that's usually what we actually want.
+    """
     raw_radius = input_dialog(
         title=title,
         text=f"Enter {item_name} radius or d to use diameter",
@@ -60,10 +95,28 @@ def radius_or_diameter_dialog(style: Style, title: str, item_name: str) -> float
         return float(raw_radius)
 
 def round_to_sixteenths(value: float) -> float:
+    """Utility function to round a floating point value to the nearest 1/16th. Will
+    always round down.
+
+    Args:
+        value (float): The floating point value to be rounded.
+
+    Returns:
+        float: The rounded value.
+    """
     remainder = value % 0.0625
     return value - remainder
 
 def as_mixed_number(value: float) -> str:
+    """Utility function to convert a floating point value to a mixed number, rounded to
+    the nearest 1/16th.
+
+    Args:
+        value (float): The floating point value to be converted
+
+    Returns:
+        str: The mixed number form, rounded to the nearest 1/16th.
+    """
     rounded_value = round_to_sixteenths(value)
     
     fractional_part = (rounded_value % 1) * 16

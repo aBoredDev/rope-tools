@@ -24,8 +24,15 @@ class FidLength:
         self.session = session
     
     def calculate(self, rope_diameter: float) -> tuple[float]:
-        """Collect parameters and calculate length of a fid,
-        selecting the correct method for current mode automatically.
+        """Calculate length of a fid, accouting for rope diameter when calculating the
+        short section length, based on the Sampson tubular fid specs.
+
+        Args:
+            rope_diameter (float): The diameter of the rope to calculate for.
+
+        Returns:
+            tuple[float]: (full_length, short_section) The full length and short
+                section length of the fid.
         """
         if rope_diameter <= 0.5:
             short_length = 0.375
@@ -40,7 +47,7 @@ class FidLength:
         return full_length, short_section
 
     def text(self):
-        """Collects parameters and runs calculations in a basic text format"""
+        """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
         rope_diameter = float(self.session.prompt(self.rope_diameter_message))
 
@@ -50,8 +57,10 @@ class FidLength:
         print(f"Results\n================\nFid length: {utilities.as_mixed_number(full_length)}\nShort section: {utilities.as_mixed_number(short_section)}")
 
     def dialog(self):
-        """Collects parameters and runs calculations with a console GUI"""
+        """Collects parameters and prints results with a console GUI."""
         # === Collect parameters ===
+        # try/except because when the user hits 'Cancel' on the dialog, it returns None
+        # which causes float() to throw a TypeError
         try:
             rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
         except TypeError:
