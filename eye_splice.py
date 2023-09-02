@@ -27,7 +27,17 @@ class TwistedEyeSplice:
         self.session = session
 
     def calculate(self, eye_radius: float, rope_diameter: float, tuck_count: int) -> tuple[float]:
-        """Run calculation with collected parameters"""
+        """Calculates the length required to create the desired eye.
+
+        Args:
+            eye_radius (float): The desired eye radius.
+            rope_diameter (float): The diameter of the rope being used.
+            tuck_count (int): The desired number of 'tucks'.
+
+        Returns:
+            tuple[float]: (full_length, eye_length, tuck_length, lost_length) The
+                various lengths needed to create the eye.
+        """
         # Correction to account for rope size
         eye_radius += rope_diameter / 2
         # Angle between rope axis and the end of the tangent section (90°-alpha)
@@ -52,7 +62,7 @@ class TwistedEyeSplice:
         return full_length, eye_length, tuck_length, lost_length
 
     def text(self):
-        """Collects parameters and runs calculations in a basic text format"""
+        """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
         # Eye radius/diameter
         eye_radius = utilities.radius_or_diameter_text(self.session, "eye")
@@ -74,13 +84,13 @@ class TwistedEyeSplice:
         )
 
     def dialog(self):
-        """Collects parameters and runs calculations with a console GUI"""
+        """Collects parameters and prints results with a console GUI"""
         # === Collect parameters ===
+        # try/except because when the user hits 'Cancel' on the dialog, it returns None
+        # which causes float() and int() to throw a TypeError
         try:
             eye_radius = utilities.radius_or_diameter_dialog(self.style, self.title, "eye")
-
             rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
-
             tuck_count = int(input_dialog(title=self.title, text=self.tuck_count_message, style=self.style).run())
         except TypeError:
             return
@@ -119,7 +129,16 @@ class HollowBraidLockedEyeSplice:
         self.session = session
 
     def calculate(self, eye_radius: float, rope_diameter: float) -> tuple[float]:
-        """Calculate length required for the eye splice."""
+        """Calculate length required for the eye splice.
+
+        Args:
+            eye_radius (float): The desired radius of the eye.
+            rope_diameter (float): The diameter of the rope.
+
+        Returns:
+            tuple[float]: (full_length, eye_length, bury_length, lost_length) The
+                various lengths needed to create the eye splice. 
+        """
         # === Run calculations ===
         # Correction to accout for rope diameter
         eye_radius += rope_diameter / 2
@@ -144,7 +163,7 @@ class HollowBraidLockedEyeSplice:
         return full_length, eye_length, bury_length, lost_length
 
     def text(self):
-        """Collects parameters and prints results in text only mode"""
+        """Collects parameters and prints results in text only mode."""
         # === Collect parameters ===
         # Eye radius/diameter
         eye_radius = utilities.radius_or_diameter_text(self.session, "eye")
@@ -163,7 +182,10 @@ class HollowBraidLockedEyeSplice:
         )
 
     def dialog(self):
-        """Collects parameters and prints results in dialog mode"""
+        """Collects parameters and prints results in dialog mode."""
+        # === Collect parameter ===
+        # try/except because when the user hits 'Cancel' on the dialog, it returns None
+        # which causes float() to throw a TypeError
         try:
             eye_radius = utilities.radius_or_diameter_dialog(self.style, self.title, "eye")
 

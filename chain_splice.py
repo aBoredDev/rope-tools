@@ -17,7 +17,8 @@ class TwistedChainSplice:
     def __init__(
         self, session: PromptSession, style: Style
     ):
-        """Class for calculating the length of rope required for a chain splice in twisted rope
+        """Class for calculating the length of rope required for a chain splice in
+        twisted rope
 
         Args:
             session (PromptSession): Ensures consistent formatting in text only mode.
@@ -25,9 +26,30 @@ class TwistedChainSplice:
         """
         self.style = style
         self.session = session
+    
+    def calculate(self, chain_radius: float, rope_diameter: float, tuck_count: int) -> tuple[float]:
+        """Calculate length required for the chain splice.
+
+        Args:
+            chain_radius (float): The radius of the chain link.
+            rope_diameter (float): The diameter of the rope.
+            tuck_count (int): The number of 'tucks' desired.
+
+        Returns:
+            tuple[float]: (total_length, tuck_length, loop_length, lost_length) The
+                various lengths needed to create the splice.
+        """
+        # Length required to go through the chain
+        loop_length = 2 * pi * (chain_radius + (rope_diameter / 2))
+        # Length required for the tucks
+        tuck_length = rope_diameter * (3 * tuck_count)
+        total_length = loop_length + tuck_length
+        lost_length = total_length - chain_radius * 4
+
+        return total_length, tuck_length, loop_length, lost_length
 
     def text(self):
-        """Collects parameters and prints results in a basic text format"""
+        """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
         rope_diameter = float(self.session.prompt(self.rope_diameter_message))
         chain_radius = float(self.session.prompt(self.chain_diameter_message)) / 2
@@ -41,8 +63,10 @@ class TwistedChainSplice:
         )
 
     def dialog(self):
-        """Collects parameters and runs calculations with a console GUI"""
+        """Collects parameters and prints results with a console GUI."""
         # === Collect parameters ===
+        # try/except because when the user hits 'Cancel' on the dialog, it returns None
+        # which causes float() and int() to throw a TypeError
         try:
             rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
             chain_radius = float(input_dialog(title=self.title, text=self.chain_diameter_message, style=self.style).run())
@@ -60,17 +84,6 @@ class TwistedChainSplice:
             style=self.style
         ).run()
 
-    def calculate(self, chain_radius: float, rope_diameter: float, tuck_count: int) -> tuple[float]:
-        """Calculate length required for the chain splice."""
-        # Length required to go through the chain
-        loop_length = 2 * pi * (chain_radius + (rope_diameter / 2))
-        # Length required for the tucks
-        tuck_length = rope_diameter * (3 * tuck_count)
-        total_length = loop_length + tuck_length
-        lost_length = total_length - chain_radius * 4
-
-        return total_length, tuck_length, loop_length, lost_length
-
     def __str__(self):
         return self.title
 
@@ -84,8 +97,8 @@ class HollowBraidChainSplice:
     def __init__(
         self, session: PromptSession, style: Style
     ):
-        """Class for calculating the length of rope required for a chain splice in hollow braid rope
-        (Essentially just a locked brummel with the correct size eye)
+        """Class for calculating the length of rope required for a chain splice in
+        hollow braid rope (Essentially just a locked brummel with the correct size eye)
 
         Args:
             session (PromptSession): Ensures consistent formatting in text only mode.
@@ -95,7 +108,16 @@ class HollowBraidChainSplice:
         self.session = session
     
     def calculate(self, chain_radius: float, rope_diameter: float) -> tuple[float]:
-        """Calculate length required for the chain splice."""
+        """Calculate length required for the chain splice.
+
+        Args:
+            chain_radius (float): The radius of the chain link
+            rope_diameter (float): The diameter of the rope
+
+        Returns:
+            tuple[float]: (total_length, bury_length, loop_length, lost_length) The
+                various lengths needed to create the chain splice.
+        """
         # Length required to go through the chain
         loop_length = 2 * pi * (chain_radius + (rope_diameter / 2)) + (rope_diameter * 3)
         # Length required for the bury
@@ -106,7 +128,7 @@ class HollowBraidChainSplice:
         return total_length, bury_length, loop_length, lost_length
 
     def text(self):
-        """Collects parameters and prints results in a basic text format"""
+        """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
         rope_diameter = float(self.session.prompt(self.rope_diameter_message))
         chain_radius = float(self.session.prompt(self.chain_diameter_message)) / 2
@@ -119,8 +141,10 @@ class HollowBraidChainSplice:
         )
 
     def dialog(self):
-        """Collects parameters and runs calculations with a console GUI"""
+        """Collects parameters and runs calculations with a console GUI."""
         # === Collect parameters ===
+        # try/except because when the user hits 'Cancel' on the dialog, it returns None
+        # which causes float() to throw a TypeError
         try:
             rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
             chain_radius = float(input_dialog(title=self.title, text=self.chain_diameter_message, style=self.style).run())

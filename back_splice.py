@@ -24,9 +24,21 @@ class TwistedBackSplice:
         """
         self.style = style
         self.session = session
+    
+    def calculate(self, rope_diameter: float) -> float:
+            """Calculate length required for the back splice.
 
+            Args:
+                rope_diameter (float): The rope diameter to calculate for.
+
+            Returns:
+                float: The length needed to tie a back splice.
+            """
+            # === Run calculations ===
+            return rope_diameter * 15
+    
     def text(self):
-        """Collects parameters and runs calculations in a basic text format"""
+        """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
         rope_diameter = float(self.session.prompt(self.rope_diameter_message))
 
@@ -37,7 +49,10 @@ class TwistedBackSplice:
         print(f"Results\n================\nLength: {utilities.as_mixed_number(length)}")
 
     def dialog(self):
-        """Collects parameters and runs calculations with a console GUI"""
+        """Collects parameters and prints results with a console GUI."""
+        # === Collect parameters ===
+        # try/except because when the user hits 'Cancel' on the dialog, it returns None
+        # which causes float() to throw a TypeError
         try:
             rope_diameter = float(
                 input_dialog(
@@ -56,11 +71,6 @@ class TwistedBackSplice:
             text=f"Length: {utilities.as_mixed_number(length)}",
             style=self.style
         ).run()
-
-    def calculate(self, rope_diameter: float) -> float:
-        """Calculate length required for the back splice."""
-        # === Run calculations ===
-        return rope_diameter * 15
 
     def __str__(self):
         return self.title
