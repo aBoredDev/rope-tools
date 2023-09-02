@@ -28,6 +28,9 @@ Caluculates the length needed to form an eye of a given diameter with a given di
 #### Chain splice
 Calculates the length of rope needed to make a chain splice (attaches a rope to a chain link) in a given diameter of rope.
 
+#### [Grog sling](https://www.animatedknots.com/grog-sling-knot)
+Calculates the lengths needed to create a [grog sling](https://www.animatedknots.com/grog-sling-knot) of a given size with a given diameter of rope.
+
 ## Disclaimer
 The numbers given by this tool are intended as a guide only. If you plan on using any of the splices described here for lifting or life support appliations, PLEASE DO YOUR OWN RESEARCH on how to properly tie these splices and how much length you really need.
 

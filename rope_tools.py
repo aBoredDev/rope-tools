@@ -17,7 +17,7 @@ Options:
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import radiolist_dialog, message_dialog
-import eye_splice, back_splice, chain_splice, general
+import eye_splice, back_splice, chain_splice, grog_sling, general
 import utilities
 from docopt import docopt
 
@@ -37,7 +37,8 @@ calculations = [
     ],
     [  # Splices in hollow braid rope
         eye_splice.HollowBraidLockedEyeSplice(session, style),
-        chain_splice.HollowBraidChainSplice(session, style)
+        chain_splice.HollowBraidChainSplice(session, style),
+        grog_sling.GrogSling(session, style)
     ]
 ]
 
