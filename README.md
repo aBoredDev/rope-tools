@@ -3,8 +3,10 @@ A set of tools for performing various calculations related to splicing rope. Cur
 
 ## Current calculations
 ### General
-#### Fid length
-Calculates the short and full fid lengths for a given diameter of rope. The short length differs slightly depending on the diamter of the rope.
+#### Fid length calculator & table
+Calculates or displays a table for the short (7 \* dia <sup>[See note]</sup>), half (10.5 \* dia), long (14 \* dia), and full (21 \* dia) fid lengths for a given diameter of rope.
+
+Note: The short length is often calculated as a percentage of the full fid length, and differs slightly depending on the diameter of the rope.
  - For ropes up to 1/2", the short length is 37.5% of the full length.
  - For ropes from 1/2" to 3/4", the short length is 30% of the full length.
  - For ropes larger than 3/4", the short length is 25% of the full length.
