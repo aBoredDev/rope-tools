@@ -32,6 +32,6 @@ Calculates the length of rope needed to make a chain splice (attaches a rope to 
 Calculates the lengths needed to create a [grog sling](https://www.animatedknots.com/grog-sling-knot) of a given size with a given diameter of rope.
 
 ## Disclaimer
-The numbers given by this tool are intended as a guide only. If you plan on using any of the splices described here for lifting or life support appliations, PLEASE DO YOUR OWN RESEARCH on how to properly tie these splices and how much length you really need.
+The numbers given by this tool are intended as a guide only. If you plan on using any of the splices described here for lifting or life support appliations, it is your responsibility to make sure you are tying everything correctly and following all relevant laws where you live. There are a lot of variables with splices, and making a mistake with the wrong ones can seriously impact the strength of the final splice. If you doubt your skills at all, you should not be trusting your, or other people's, lives to your splices.
 
 [^1]: This value was reached through trial and error while tying back splices in 23 x 100ft lengths of 5/8" rope.
