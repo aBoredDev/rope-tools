@@ -30,7 +30,10 @@ full_screen = arguments["--dialog"]
 # === Ropes and splices ===
 rope_types = list(utilities.RopeType)
 calculations = [
-    [general.FidLength(session, style)],  # General calculations
+    [  # General calculations
+        general.FidLengthCalculate(session, style),
+        general.FidLengthTable(session, style)
+    ],
     [  # Splices in twisted rope
         eye_splice.TwistedEyeSplice(session, style),
         back_splice.TwistedBackSplice(session, style),
