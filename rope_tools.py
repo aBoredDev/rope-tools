@@ -14,9 +14,10 @@ Options:
   -h --help     Show this message.
 """
 #!/usr/bin/env python3
-from prompt_toolkit import PromptSession
+from prompt_toolkit import PromptSession, print_formatted_text
 from prompt_toolkit.styles import Style
-from prompt_toolkit.shortcuts import radiolist_dialog, message_dialog
+from prompt_toolkit.shortcuts import radiolist_dialog, message_dialog, yes_no_dialog
+from prompt_toolkit.formatted_text import FormattedText
 import eye_splice, back_splice, chain_splice, grog_sling, general
 import utilities
 from docopt import docopt
@@ -42,6 +43,8 @@ calculations = [
     ]
 ]
 
+# Check that all the calculations have been categorized correctly in case the user has
+# added more.
 cat_errors = []
 for rt in rope_types:
     for c in calculations[rt.value]:
@@ -49,6 +52,8 @@ for rt in rope_types:
             cat_errors.append(f"  Name: {c.title} ({c.rope_type})\n  As rope type: {rt}")
             calculations[rt.value].remove(c)
 
+# If mis-categorized calculations have been found, notify the user of this, and remove
+# the offending calculation from the list.
 if len(cat_errors):
     if not full_screen:
         print("The following calculations have been categorized incorrectly and will be omitted:\n")
@@ -65,6 +70,27 @@ if len(cat_errors):
 end_message = "Run again? [y/N] "
 
 running = True
+# Print the disclaimer
+if full_screen:
+    running = yes_no_dialog(
+        title="!!! DISCLAIMER - READ FULLY BEFORE CONTINUING !!!",
+        text="The numbers given by this tool are intended as a guide only. If you plan on using any of the splices described here for lifting or life support appliations, it is your responsibility to make sure you are tying everything correctly and following all relevant laws where you live. There are a lot of variables with splices, and making a mistake with the wrong ones can seriously impact the strength of the final splice. If you doubt yuor skills at all, you should not be trusting your, or other people's, lives to your splices.\n\nBy selecting yes, you are saying that you have read and agree to the disclaimer.",
+        style=Style.from_dict({
+            "frame.label": "#ff0000",
+            "dialog": "bg:#ff0000"
+        })
+    ).run()
+else:
+    print_formatted_text(FormattedText([
+        ("#ff0000", "!!! DISCLAIMER - READ FULLY BEFORE CONTINUING !!!\n\n")
+    ]))
+    print("The numbers given by this tool are intended as a guide only. If you plan on using any of the splices described here for lifting or life support appliations, it is your responsibility to make sure you are tying everything correctly and following all relevant laws where you live. There are a lot of variables with splices, and making a mistake with the wrong ones can seriously impact the strength of the final splice. If you doubt yuor skills at all, you should not be trusting your, or other people's, lives to your splices.\n\n")
+    response = session.prompt(FormattedText([
+        ("#ff0000", "Type 'yes' if you have read and agree to the disclaimer: ")
+    ]))
+    if not response.lower() == 'yes':
+        running = False
+
 while running and not full_screen:
     # Ask what rope type we are working with
     rope_type = utilities.select_from_list(
@@ -94,7 +120,7 @@ while running and not full_screen:
     # See if the user wants to run another calculation
     run_again = session.prompt(end_message)
     if run_again.lower() not in ["y", "yes"]:
-        running = False
+        break
 
 while running and full_screen:
     rope_type = radiolist_dialog(
@@ -105,7 +131,6 @@ while running and full_screen:
     ).run()
 
     if rope_type is None:
-        running = False
         break
 
     calculation = radiolist_dialog(
