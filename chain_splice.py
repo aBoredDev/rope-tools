@@ -4,6 +4,7 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import input_dialog, message_dialog
 from math import pi
 import utilities
+import translate as tr
 
 
 class TwistedChainSplice:
@@ -15,7 +16,7 @@ class TwistedChainSplice:
     tuck_count_message = "Enter desired number of 'tucks' (5 is typical): "
 
     def __init__(
-        self, session: PromptSession, style: Style
+        self, session: PromptSession, style: Style, lang: str = "en"
     ):
         """Class for calculating the length of rope required for a chain splice in
         twisted rope
@@ -23,9 +24,13 @@ class TwistedChainSplice:
         Args:
             session (PromptSession): Ensures consistent formatting in text only mode.
             style (Style): Ensures consistent formatting in dialog mode.
+            lang (str, optional): Language specifer for translations. Defaults to "en".
         """
         self.style = style
         self.session = session
+        self.lang = lang
+        
+        self.title = tr.chain_splice[lang]
     
     def calculate(self, chain_radius: float, rope_diameter: float, tuck_count: int) -> tuple[float]:
         """Calculate length required for the chain splice.
@@ -51,15 +56,20 @@ class TwistedChainSplice:
     def text(self):
         """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
-        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
-        chain_radius = float(self.session.prompt(self.chain_diameter_message)) / 2
-        tuck_count = int(self.session.prompt(self.tuck_count_message))
+        rope_diameter = float(self.session.prompt(tr.rope_diameter_message[self.lang]))
+        chain_radius = float(self.session.prompt(tr.chain_diameter_message[self.lang])) / 2
+        tuck_count = int(self.session.prompt(tr.tuck_count_message[self.lang]))
 
         total_length, tuck_length, loop_length, lost_length = self.calculate(chain_radius, rope_diameter, tuck_count)
 
         # === Display results ===
         print(
-            f"Results\n================\nTotal length: {utilities.as_mixed_number(total_length)}\ntuck length: {utilities.as_mixed_number(tuck_length)}\nLoop length: {utilities.as_mixed_number(loop_length)}\nLost length: {utilities.as_mixed_number(lost_length)}"
+            f"{tr.results[self.lang]}\n================",
+            f"{tr.total_length[self.lang]}: {utilities.as_mixed_number(total_length)}",
+            f"{tr.tuck_length[self.lang]}: {utilities.as_mixed_number(tuck_length)}",
+            f"{tr.loop_length[self.lang]}: {utilities.as_mixed_number(loop_length)}",
+            f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            sep="\n"
         )
 
     def dialog(self):
@@ -68,9 +78,29 @@ class TwistedChainSplice:
         # try/except because when the user hits 'Cancel' on the dialog, it returns None
         # which causes float() and int() to throw a TypeError
         try:
-            rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
-            chain_radius = float(input_dialog(title=self.title, text=self.chain_diameter_message, style=self.style).run())
-            tuck_count = int(input_dialog(title=self.title, text=self.tuck_count_message, style=self.style).run())
+            rope_diameter = float(input_dialog(
+                title=self.title,
+                text=tr.rope_diameter_message[self.lang],
+                ok_text=tr.ok[self.lang],
+                cancel_text=tr.cancel[self.lang],
+                style=self.style
+            ).run())
+            
+            chain_radius = float(input_dialog(
+                title=self.title,
+                text=tr.chain_diameter_message[self.lang],
+                ok_text=tr.ok[self.lang],
+                cancel_text=tr.cancel[self.lang],
+                style=self.style
+            ).run())
+            
+            tuck_count = int(input_dialog(
+                title=self.title,
+                text=tr.tuck_count_message[self.lang],
+                ok_text=tr.ok[self.lang],
+                cancel_text=tr.cancel[self.lang],
+                style=self.style
+            ).run())
         except TypeError:
             return
         
@@ -80,7 +110,11 @@ class TwistedChainSplice:
         # === Display results ===
         message_dialog(
             title=self.title,
-            text=f"Total length: {utilities.as_mixed_number(total_length)}\ntuck length: {utilities.as_mixed_number(tuck_length)}\nLoop length: {utilities.as_mixed_number(loop_length)}\nLost length: {utilities.as_mixed_number(lost_length)}",
+            text=f"{tr.total_length[self.lang]}: {utilities.as_mixed_number(total_length)}\n" +
+                 f"{tr.tuck_length[self.lang]}: {utilities.as_mixed_number(tuck_length)}\n" +
+                 f"{tr.loop_length[self.lang]}: {utilities.as_mixed_number(loop_length)}\n" +
+                 f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            ok_text=tr.ok[self.lang],
             style=self.style
         ).run()
 
@@ -130,14 +164,19 @@ class HollowBraidChainSplice:
     def text(self):
         """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
-        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
-        chain_radius = float(self.session.prompt(self.chain_diameter_message)) / 2
+        rope_diameter = float(self.session.prompt(tr.rope_diameter_message[self.lang]))
+        chain_radius = float(self.session.prompt(tr.chain_diameter_message[self.lang])) / 2
 
         total_length, bury_length, loop_length, lost_length = self.calculate(chain_radius, rope_diameter)
 
         # === Display results ===
         print(
-            f"Results\n================\nTotal length: {utilities.as_mixed_number(total_length)}\nBury length: {utilities.as_mixed_number(bury_length)}\nLoop length: {utilities.as_mixed_number(loop_length)}\nLost length: {utilities.as_mixed_number(lost_length)}"
+            f"{tr.results[self.lang]}\n================",
+            f"{tr.total_length[self.lang]}: {utilities.as_mixed_number(total_length)}",
+            f"{tr.bury_length[self.lang]}: {utilities.as_mixed_number(bury_length)}",
+            f"{tr.loop_length[self.lang]}: {utilities.as_mixed_number(loop_length)}",
+            f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            sep="\n"
         )
 
     def dialog(self):
@@ -146,8 +185,21 @@ class HollowBraidChainSplice:
         # try/except because when the user hits 'Cancel' on the dialog, it returns None
         # which causes float() to throw a TypeError
         try:
-            rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
-            chain_radius = float(input_dialog(title=self.title, text=self.chain_diameter_message, style=self.style).run())
+            rope_diameter = float(input_dialog(
+                title=self.title,
+                text=tr.rope_diameter_message[self.lang],
+                ok_text=tr.ok[self.lang],
+                cancel_text=tr.cancel[self.lang],
+                style=self.style
+            ).run())
+            
+            chain_radius = float(input_dialog(
+                title=self.title,
+                text=tr.chain_diameter_message[self.lang],
+                ok_text=tr.ok[self.lang],
+                cancel_text=tr.cancel[self.lang],
+                style=self.style
+            ).run())
         except TypeError:
             return
         
@@ -157,7 +209,11 @@ class HollowBraidChainSplice:
         # === Display results ===
         message_dialog(
             title=self.title,
-            text=f"Total length: {utilities.as_mixed_number(total_length)}\nBury length: {utilities.as_mixed_number(bury_length)}\nLoop length: {utilities.as_mixed_number(loop_length)}\nLost length: {utilities.as_mixed_number(lost_length)}",
+            text=f"{tr.total_length[self.lang]}: {utilities.as_mixed_number(total_length)}\n" +
+                 f"{tr.bury_length[self.lang]}: {utilities.as_mixed_number(bury_length)}\n" +
+                 f"{tr.loop_length[self.lang]}: {utilities.as_mixed_number(loop_length)}\n" +
+                 f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            ok_text=tr.ok[self.lang],
             style=self.style
         ).run()
 

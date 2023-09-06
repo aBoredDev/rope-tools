@@ -4,27 +4,31 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import input_dialog, message_dialog
 import utilities
+import translate as tr
 
 
 class TwistedEyeSplice:
+    # Default value only, will be overridden by constructor with translation value
     title = "Eye Splice"
     rope_type = utilities.RopeType.TWISTED
     reference = "ABOK #2725"
 
-    rope_diameter_message = "Enter rope diameter: "
-    tuck_count_message = "Enter number of 'tucks' (5 is typical): "
-
     def __init__(
-        self, session: PromptSession, style: Style
+        self, session: PromptSession, style: Style, lang: str = "en"
     ):
-        """Class for calculating the length of rope required for an eye splice in twisted rope
+        """Class for calculating the length of rope required for an eye splice in
+        twisted rope.
 
         Args:
             session (PromptSession): Ensures consistent formatting in text only mode.
             style (Style): Ensures consistent formatting in dialog mode.
+            lang (str, optional): Language specifer for translations. Defaults to "en".
         """
         self.style = style
         self.session = session
+        self.lang = lang
+        
+        self.title = tr.eye_splice[lang]
 
     def calculate(self, eye_radius: float, rope_diameter: float, tuck_count: int) -> tuple[float]:
         """Calculates the length required to create the desired eye.
@@ -65,13 +69,13 @@ class TwistedEyeSplice:
         """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
         # Eye radius/diameter
-        eye_radius = utilities.radius_or_diameter_text(self.session, "eye")
+        eye_radius = utilities.radius_or_diameter_text(self.session, tr.eye[self.lang])
 
         # Rope diameter
-        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
+        rope_diameter = float(self.session.prompt(tr.rope_diameter_message[self.lang]))
 
         # No. of tucks
-        tuck_count = int(self.session.prompt(self.tuck_count_message))
+        tuck_count = int(self.session.prompt(tr.tuck_count_message[self.lang]))
 
         # === Run calculations ===
         full_length, eye_length, tuck_length, lost_length = self.calculate(
@@ -80,7 +84,12 @@ class TwistedEyeSplice:
 
         # Print to screen
         print(
-            f"Results\n================\nFull length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nTuck length: {utilities.as_mixed_number(tuck_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}"
+            f"{tr.results[self.lang]}\n================",
+            f"{tr.total_length[self.lang]}: {utilities.as_mixed_number(full_length)}",
+            f"{tr.eye_length[self.lang]}: {utilities.as_mixed_number(eye_length)}",
+            f"{tr.tuck_length[self.lang]}: {utilities.as_mixed_number(tuck_length)}",
+            f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            sep="\n"
         )
 
     def dialog(self):
@@ -90,20 +99,33 @@ class TwistedEyeSplice:
         # which causes float() and int() to throw a TypeError
         try:
             eye_radius = utilities.radius_or_diameter_dialog(self.style, self.title, "eye")
-            rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
-            tuck_count = int(input_dialog(title=self.title, text=self.tuck_count_message, style=self.style).run())
+            rope_diameter = float(input_dialog(
+                title=self.title,
+                text=tr.rope_diameter_message[self.lang],
+                style=self.style
+            ).run())
+            tuck_count = int(input_dialog(
+                title=self.title,
+                text=tr.tuck_count_message[self.lang],
+                style=self.style
+            ).run())
         except TypeError:
             return
 
         # === Run calculations ===
-        full_length, eye_length, tuck_length, lost_length = self.calculate(
+        total_length, eye_length, tuck_length, lost_length = self.calculate(
             eye_radius, rope_diameter, tuck_count
         )
 
         # === Show results ===
         message_dialog(
-            title="Results",
-            text=f"Full length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nTuck length: {utilities.as_mixed_number(tuck_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}",
+            title=tr.results[self.lang],
+            text=f"{tr.total_length[self.lang]}: {utilities.as_mixed_number(total_length)}\n" +
+                 f"{tr.eye_length[self.lang]}: {utilities.as_mixed_number(eye_length)}\n" +
+                 f"{tr.tuck_length[self.lang]}: {utilities.as_mixed_number(tuck_length)}\n" +
+                 f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            ok_text=tr.ok[self.lang],
+            style=self.style
         ).run()
 
     def __str__(self):
@@ -111,22 +133,26 @@ class TwistedEyeSplice:
 
 
 class HollowBraidLockedEyeSplice:
+    # Default value only, will be overridden by constructor with translation value
     title = "Locked Brummel Eye Splice"
     rope_type = utilities.RopeType.HOLLOW_BRAID
 
-    rope_diameter_message = "Enter rope diameter: "
-
     def __init__(
-        self, session: PromptSession, style: Style
+        self, session: PromptSession, style: Style, lang: str = "en"
     ):
         """Class for calculating the length of rope required for an eye splice in hollow braid rope
 
         Args:
             session (PromptSession): Ensures consistent formatting in text only mode.
             style (Style): Ensures consistent formatting in dialog mode.
+            lang (str, optional): Language specifer for translations. Defaults to "en".
         """
         self.style = style
         self.session = session
+        self.lang = lang
+        
+        # Get the translated title
+        self.title = tr.locked_eye_splice[self.lang]
 
     def calculate(self, eye_radius: float, rope_diameter: float) -> tuple[float]:
         """Calculate length required for the eye splice.
@@ -140,7 +166,7 @@ class HollowBraidLockedEyeSplice:
                 various lengths needed to create the eye splice. 
         """
         # === Run calculations ===
-        # Correction to accout for rope diameter
+        # Correction to account for rope diameter
         eye_radius += rope_diameter / 2
         # Angle between rope axis and end of tangent section (90°-alpha)
         beta = acos(eye_radius / (eye_radius * 3))
@@ -166,19 +192,28 @@ class HollowBraidLockedEyeSplice:
         """Collects parameters and prints results in text only mode."""
         # === Collect parameters ===
         # Eye radius/diameter
-        eye_radius = utilities.radius_or_diameter_text(self.session, "eye")
+        eye_radius = utilities.radius_or_diameter_text(
+            self.session,
+            tr.eye[self.lang],
+            self.lang
+        )
 
         # Rope diameter
-        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
+        rope_diameter = float(self.session.prompt(tr.rope_diameter_message[self.lang]))
 
         # === Run calculations ===
-        full_length, eye_length, bury_length, lost_length = self.calculate(
+        total_length, eye_length, bury_length, lost_length = self.calculate(
             eye_radius, rope_diameter
         )
 
         # Print to screen
         print(
-            f"Results\n================\nFull length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nBury length: {utilities.as_mixed_number(bury_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}"
+            f"{tr.results[self.lang]}\n================",
+            f"{tr.full_length[self.lang]}: {utilities.as_mixed_number(total_length)}",
+            f"{tr.eye_length[self.lang]}: {utilities.as_mixed_number(eye_length)}",
+			f"{tr.bury_length[self.lang]}: {utilities.as_mixed_number(bury_length)}",
+			f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            sep="\n"
         )
 
     def dialog(self):
@@ -187,25 +222,39 @@ class HollowBraidLockedEyeSplice:
         # try/except because when the user hits 'Cancel' on the dialog, it returns None
         # which causes float() to throw a TypeError
         try:
-            eye_radius = utilities.radius_or_diameter_dialog(self.style, self.title, "eye")
+            eye_radius = utilities.radius_or_diameter_dialog(
+                self.style, 
+                self.title,
+                tr.eye[self.lang],
+                self.lang
+            )
 
             rope_diameter = float(
                 input_dialog(
-                    title="Rope diameter", text=self.rope_diameter_message
+                    title=self.title,
+                    text=tr.rope_diameter_message[self.lang],
+                    ok_text=tr.ok[self.lang],
+                    cancel_text=tr.cancel[self.lang],
+                    style=self.style
                 ).run()
             )
         except TypeError:
             return
 
         # === Run calculations ===
-        full_length, eye_length, bury_length, lost_length = self.calculate(
+        total_length, eye_length, bury_length, lost_length = self.calculate(
             eye_radius, rope_diameter
         )
 
         # === Show results ===
         message_dialog(
-            title="Results",
-            text=f"Full length: {utilities.as_mixed_number(full_length)}\nEye length: {utilities.as_mixed_number(eye_length)}\nBury length: {utilities.as_mixed_number(bury_length)}\nEst. length lost: {utilities.as_mixed_number(lost_length)}",
+            title=tr.results[self.lang],
+            text=f"{tr.total_length[self.lang]}: {utilities.as_mixed_number(total_length)}\n" +
+                 f"{tr.eye_length[self.lang]}: {utilities.as_mixed_number(eye_length)}\n" +
+                 f"{tr.bury_length[self.lang]}: {utilities.as_mixed_number(bury_length)}\n" +
+                 f"{tr.lost_length[self.lang]}: {utilities.as_mixed_number(lost_length)}",
+            ok_text=tr.ok[self.lang],
+            style=self.style
         ).run()
 
     def __str__(self):
