@@ -19,6 +19,7 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import radiolist_dialog, message_dialog, yes_no_dialog
 from prompt_toolkit.formatted_text import FormattedText
 import eye_splice, back_splice, chain_splice, grog_sling, general
+import translate as tr
 import utilities
 from docopt import docopt
 
@@ -26,6 +27,19 @@ arguments = docopt(__doc__, version="aBoredDev's Rope Tools 1.0")
 session = PromptSession()
 style = Style.from_dict({})
 full_screen = arguments["--dialog"]
+lang = "en"
+
+# Check that the language is one that we have translations for to avoid a TON of KeyErrors
+if lang not in tr.language_options:
+    if full_screen:
+        message_dialog(
+            title="Alert",
+            text=f"Specified language is unavailable. Available options are {', '.join(tr.language_options)}.\nDefaulting to english.",
+            style=style
+        )
+    else:
+        print(f"Specified language is unavailable. Available options are {', '.join(tr.language_options)}.\nDefaulting to english.")
+    lang = "en"
 
 # === Ropes and splices ===
 rope_types = list(utilities.RopeType)
@@ -52,32 +66,34 @@ cat_errors = []
 for rt in rope_types:
     for c in calculations[rt.value]:
         if not c.rope_type == rt:
-            cat_errors.append(f"  Name: {c.title} ({c.rope_type})\n  As rope type: {rt}")
+            cat_errors.append(tr.cat_error_listing[lang].format(
+                c_title=c.title,
+                c_rope_type=tr.rope_types[lang][c.rope_type],
+                rt=tr.rope_types[lang][rt]
+            ))
             calculations[rt.value].remove(c)
 
 # If mis-categorized calculations have been found, notify the user of this, and remove
 # the offending calculation from the list.
 if len(cat_errors):
     if not full_screen:
-        print("The following calculations have been categorized incorrectly and will be omitted:\n")
-        print("\n  ===\n".join(cat_errors))
+        print(f"{tr.cat_error_message[lang]}\n")
+        print(*cat_errors, sep="\n  ===\n")
     if full_screen:
-        m = "The following calculations have been categorized incorrectly and will be omitted:\n"
+        m = f"{tr.cat_error_message[lang]}\n"
         m += "\n  ===\n".join(cat_errors)
         message_dialog(
-            title="Error",
+            title=tr.error[lang],
             text=m,
             style=style
         ).run()
-
-end_message = "Run again? [y/N] "
 
 running = True
 # Print the disclaimer
 if full_screen:
     running = yes_no_dialog(
-        title="!!! DISCLAIMER - READ FULLY BEFORE CONTINUING !!!",
-        text="The numbers given by this tool are intended as a guide only. If you plan on using any of the splices described here for lifting or life support appliations, it is your responsibility to make sure you are tying everything correctly and following all relevant laws where you live. There are a lot of variables with splices, and making a mistake with the wrong ones can seriously impact the strength of the final splice. If you doubt yuor skills at all, you should not be trusting your, or other people's, lives to your splices.\n\nBy selecting yes, you are saying that you have read and agree to the disclaimer.",
+        title=tr.disclaimer_title[lang],
+        text=f"{tr.disclaimer_body[lang]}\n\n{tr.disclaimer_acknowledge_dialog[lang]}",
         style=Style.from_dict({
             "frame.label": "#ff0000",
             "dialog": "bg:#ff0000"
@@ -85,22 +101,22 @@ if full_screen:
     ).run()
 else:
     print_formatted_text(FormattedText([
-        ("#ff0000", "!!! DISCLAIMER - READ FULLY BEFORE CONTINUING !!!\n\n")
+        ("#ff0000", f"{tr.disclaimer_title[lang]}\n\n")
     ]))
-    print("The numbers given by this tool are intended as a guide only. If you plan on using any of the splices described here for lifting or life support appliations, it is your responsibility to make sure you are tying everything correctly and following all relevant laws where you live. There are a lot of variables with splices, and making a mistake with the wrong ones can seriously impact the strength of the final splice. If you doubt yuor skills at all, you should not be trusting your, or other people's, lives to your splices.\n\n")
+    print(f"{tr.disclaimer_body[lang]}\n\n")
     response = session.prompt(FormattedText([
-        ("#ff0000", "Type 'yes' if you have read and agree to the disclaimer: ")
+        ("#ff0000", tr.disclaimer_acknowledge_text_message[lang])
     ]))
-    if not response.lower() == 'yes':
+    if not response.lower() == tr.disclaimer_acknowledge_text_answer[lang]:
         running = False
 
 while running and not full_screen:
     # Ask what rope type we are working with
     rope_type = utilities.select_from_list(
         session,
-        "Enter a number from the list to select a type of rope:",
-        rope_types,
-        "Quit",
+        tr.select_rope_type_text[lang],
+        [tr.rope_types[lang][rt] for rt in rope_types],
+        tr.quit[lang]
     )
 
     if rope_type == len(rope_types):
@@ -109,9 +125,9 @@ while running and not full_screen:
     # Ask what calculation the user wants to perform
     calculation = utilities.select_from_list(
         session,
-        "Enter a number from the list to select a calculation:",
+        tr.select_calculation_text[lang],
         calculations[rope_type],
-        "Back",
+        tr.back[lang],
     )
 
     if calculation == len(calculations[rope_type]):
@@ -121,28 +137,29 @@ while running and not full_screen:
     calculations[rope_type][calculation].text()
 
     # See if the user wants to run another calculation
-    run_again = session.prompt(end_message)
-    if run_again.lower() not in ["y", "yes"]:
+    run_again = session.prompt(tr.end_message[lang])
+    if run_again.lower() not in tr.end_message_answer[lang]:
         break
 
 while running and full_screen:
     rope_type = radiolist_dialog(
-        title="Rope type",
-        text="Which type of rope are you working with?",
-        values=[[rt.value, str(rt)] for rt in rope_types],
-        cancel_text="Quit",
+        title=tr.rope_type[lang],
+        text=tr.select_rope_type_dialog[lang],
+        values=[[rt.value, tr.rope_types[lang][rt]] for rt in rope_types],
+        cancel_text=tr.quit[lang],
     ).run()
 
     if rope_type is None:
         break
 
     calculation = radiolist_dialog(
-        title="Calculation",
-        text="What calculation would you like to make?",
+        title=tr.calculation[lang],
+        text=tr.select_calculation_dialog[lang],
         values=[
             [i, calculations[rope_type][i].title]
             for i in range(len(calculations[rope_type]))
         ],
+        cancel_text=tr.back[lang]
     ).run()
 
     if calculation is None:

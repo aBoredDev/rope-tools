@@ -3,25 +3,29 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
 from prompt_toolkit.shortcuts import input_dialog, message_dialog
 import utilities
+import translate as tr
 
 
 class FidLengthCalculate:
+    # Default value only, will be overridden by constructor with translation value
     title = "Fid Length Calculator"
     rope_type = utilities.RopeType.GENERAL
 
-    rope_diameter_message = "Enter rope diameter: "
-
     def __init__(
-        self, session: PromptSession, style: Style
+        self, session: PromptSession, style: Style, lang: str = "en"
     ):
         """Class for calculating the length of a fid for a particular diameter of rope.
 
         Args:
             session (PromptSession): Ensures consistent formatting in text only mode.
             style (Style): Ensures consistent formatting in dialog mode.
+            lang (str, optional): Language specifer for translations. Defaults to "en".
         """
         self.style = style
         self.session = session
+        self.lang = lang
+        
+        self.title = tr.fid_length_calculate[lang]
     
     def calculate(self, rope_diameter: float) -> tuple[float]:
         """Calculate length of a fid, accouting for rope diameter when calculating the
@@ -51,17 +55,18 @@ class FidLengthCalculate:
     def text(self):
         """Collects parameters and prints results in a basic text format."""
         # === Collect parameters ===
-        rope_diameter = float(self.session.prompt(self.rope_diameter_message))
+        rope_diameter = float(self.session.prompt(tr.rope_diameter_message[self.lang]))
 
         # === Calculations ===
         short_length, half_length, long_length, full_length = self.calculate(rope_diameter)
 
-        print(f"Results\n================\n" +
-              f"Short fid: {utilities.as_mixed_number(short_length)}\n" +
-              f"Half fid: {utilities.as_mixed_number(half_length)}\n" +
-              f"Long fid: {utilities.as_mixed_number(long_length)}\n" +
-              f"Full fid: {utilities.as_mixed_number(full_length)}"
-              )
+        print(f"{tr.results[self.lang]}\n================",
+            f"{tr.short_fid[self.lang]}: {utilities.as_mixed_number(short_length)}",
+            f"{tr.half_fid[self.lang]}: {utilities.as_mixed_number(half_length)}",
+            f"{tr.long_fid[self.lang]}: {utilities.as_mixed_number(long_length)}",
+            f"{tr.full_fid[self.lang]}: {utilities.as_mixed_number(full_length)}",
+            sep="\n"
+        )
 
     def dialog(self):
         """Collects parameters and prints results with a console GUI."""
@@ -69,7 +74,13 @@ class FidLengthCalculate:
         # try/except because when the user hits 'Cancel' on the dialog, it returns None
         # which causes float() to throw a TypeError
         try:
-            rope_diameter = float(input_dialog(title=self.title, text=self.rope_diameter_message, style=self.style).run())
+            rope_diameter = float(input_dialog(
+                title=self.title,
+                text=tr.rope_diameter_message[self.lang],
+                ok_text=tr.ok[self.lang],
+                cancel_text=tr.cancel[self.lang],
+                style=self.style
+            ).run())
         except TypeError:
             return
         
@@ -79,10 +90,11 @@ class FidLengthCalculate:
         # === Display results ===
         message_dialog(
             title=self.title,
-            text=f"Short fid: {utilities.as_mixed_number(short_length)}\n" +
-                 f"Half fid: {utilities.as_mixed_number(half_length)}\n" +
-                 f"Long fid: {utilities.as_mixed_number(long_length)}\n" +
-                 f"Full fid: {utilities.as_mixed_number(full_length)}",
+            text=f"{tr.short_fid[self.lang]}: {utilities.as_mixed_number(short_length)}\n" +
+                 f"{tr.half_fid[self.lang]}: {utilities.as_mixed_number(half_length)}\n" +
+                 f"{tr.long_fid[self.lang]}: {utilities.as_mixed_number(long_length)}\n" +
+                 f"{tr.full_fid[self.lang]}: {utilities.as_mixed_number(full_length)}",
+            ok_text=tr.ok[self.lang],
             style=self.style
         ).run()
     
@@ -90,11 +102,10 @@ class FidLengthCalculate:
         return self.title
 
 class FidLengthTable:
+    # Default value only, will be overridden by constructor with translation value
     title = "Fid Length Table"
     rope_type = utilities.RopeType.GENERAL
     
-    fid_table_headers = ("Rope dia. (in)", "Short fid (in)", "Long fid (in)",
-                         "Full fid (in)")
     fid_table = (
         ("3/32", "3/4", "1-5/16", "2"),
         ("1/8", "1", "1-3/4", "2-5/8"),
@@ -119,19 +130,32 @@ class FidLengthTable:
         ("2", "10-1/2", "28", "42")
     )
 
-    def __init__(self, session: PromptSession, style: Style):
+    def __init__(self, session: PromptSession, style: Style, lang: str = "en"):
         """Class which displays a table showing pre-calculated fid lengths. Table source:
         https://atlanticbraids.com/fid-lengths/
 
         Args:
             session (PromptSession): Ensures consistent formatting in text only mode.
             style (Style): Ensures consistent formatting in dialog mode.
+            lang (str, optional): Language specifer for translations. Defaults to "en".
         """
         self.style = style
         self.session = session
+        self.lang = lang
+        
+        self.title = tr.fid_length_table[lang]
+        self.fid_table_headers = tr.fid_table_headers[self.lang]
     
     def build_table(self, rows: int=len(fid_table)) -> list[str]:
-        """Builds out the table that will be printed to the screen."""
+        """Builds out the table that will be printed to the screen.
+
+        Args:
+            rows (int, optional): The number of rows in each table. Defaults to
+                len(fid_table) (Generates a single table with all rows).
+
+        Returns:
+            list[str]: The generated tables, each as a single string.
+        """
         # calculate the widths for each column
         col_widths = [len(h) for h in self.fid_table_headers]
         
@@ -144,8 +168,12 @@ class FidLengthTable:
         print(len(self.fid_table))
         row_sets: list[tuple[str]] = []
         for s in range(0, len(self.fid_table), rows):
-            print(f"[{s}:{s+rows}]")
-            row_sets.append(self.fid_table[s:s+rows])
+            lower = s
+            if (s+rows) > len(self.fid_table):
+                upper = len(self.fid_table)
+            else:
+                upper = s + rows
+            row_sets.append(self.fid_table[lower:upper])
         row_strings_sets: list[list[str]] = []
         for row_set in row_sets:
             row_strings: list[str] = []
@@ -169,7 +197,7 @@ class FidLengthTable:
             table_body += "+" + "+".join(["-"*cw for cw in col_widths]) + "+\n"
             
             # Credit Atlantic Braids
-            table_body += "Source: https://atlanticbraids.com/fid-lengths/"
+            table_body += f"{tr[self.lang]}: https://atlanticbraids.com/fid-lengths/"
             
             table_bodies.append(table_body)
         
@@ -189,7 +217,7 @@ class FidLengthTable:
         [message_dialog(
             title=self.title,
             text=table,
-            ok_text="Continue",
+            ok_text=tr.continue_btn[self.lang],
             style=self.style
         ).run() for table in tables]
     
